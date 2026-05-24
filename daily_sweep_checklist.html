@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Cal & ClickUp Sweep</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --border: #252a38;
+    --accent: #4f8ef7;
+    --accent-glow: rgba(79,142,247,0.15);
+    --accent-done: #34c97a;
+    --done-glow: rgba(52,201,122,0.12);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --tag-es: #f59e0b;
+    --tag-rp: #a78bfa;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px 60px;
+  }
+
+  .card {
+    width: 100%;
+    max-width: 640px;
+  }
+
+  .header {
+    margin-bottom: 32px;
+  }
+
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .progress-bar-wrap {
+    margin: 24px 0 32px;
+    background: var(--border);
+    border-radius: 100px;
+    height: 4px;
+    overflow: hidden;
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-done));
+    border-radius: 100px;
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .progress-text {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .progress-count {
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .section-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 28px 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 13px 16px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--surface);
+    user-select: none;
+  }
+
+  .item:hover {
+    border-color: var(--border);
+    background: #1e2332;
+  }
+
+  .item.done {
+    background: var(--done-glow);
+    border-color: rgba(52,201,122,0.2);
+  }
+
+  .item.done .item-text {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: rgba(107,114,128,0.5);
+  }
+
+  .checkbox {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+    transition: all 0.2s ease;
+    background: transparent;
+  }
+
+  .item.done .checkbox {
+    background: var(--accent-done);
+    border-color: var(--accent-done);
+  }
+
+  .checkmark {
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .item.done .checkmark {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .item-text {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.5;
+    transition: color 0.2s ease;
+  }
+
+  .actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 32px;
+  }
+
+  .btn {
+    padding: 11px 22px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-reset {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-reset:hover {
+    background: #1e2332;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .btn-all {
+    background: var(--accent-glow);
+    color: var(--accent);
+    border: 1px solid rgba(79,142,247,0.3);
+  }
+
+  .btn-all:hover {
+    background: rgba(79,142,247,0.25);
+  }
+
+  .complete-banner {
+    display: none;
+    margin-top: 24px;
+    padding: 14px 18px;
+    background: var(--done-glow);
+    border: 1px solid rgba(52,201,122,0.3);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent-done);
+    text-align: center;
+    letter-spacing: 0.01em;
+  }
+
+  .complete-banner.show { display: block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="label">Daily Block · ClickUp & Calendar</div>
+    <h1>Daily Cal & ClickUp Sweep</h1>
+    <div class="subtitle">Matthew Hassler | ElixirCraft Supplies & Replen Pulse</div>
+  </div>
+
+  <div class="progress-label">
+    <span class="progress-text">Progress</span>
+    <span class="progress-count" id="progressCount">0 / 10</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div class="section-title">Today's Schedule</div>
+  <div class="checklist" id="checklist">
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <span class="item-text">Open ClickUp and calendar side by side</span>
+    </div>
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <span class="item-text">Check today's schedule — every calendar event has a matching ClickUp task and vice versa</span>
+    </div>
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <span class="item-text">Verify time estimates match on both platforms for every task today</span>
+    </div>
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <span class="item-text">Confirm all meeting links (Zoom/Meet) are in both the calendar invite and the ClickUp task</span>
+    </div>
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <span class="item-text">Check that ES and RP tasks are bundled correctly — no alternating between business lines</span>
+    </div>
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <span class="item-text">Confirm priority order is respected — Big 5 and Top 3 are scheduled before everything else</span>
+    </div>
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <span class="item-text">Scan for duplicate tasks in ClickUp — merge or delete any found</span>
+    </div>
+  </div>
+
+  <div class="section-title">Tomorrow's Schedule</div>
+  <div class="checklist">
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <span class="item-text">Check tomorrow's schedule — repeat the same review for every event and task scheduled tomorrow</span>
+    </div>
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <span class="item-text">Confirm tomorrow's meetings have full agendas, correct times, correct timezones, and all guest details</span>
+    </div>
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <span class="item-text">Flag anything missing or misaligned to Matthew before it becomes a problem</span>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-reset" onclick="resetAll()">↺ Reset Checklist</button>
+    <button class="btn btn-all" onclick="completeAll()">✓ Mark All Done</button>
+  </div>
+
+  <div class="complete-banner" id="completeBanner">
+    ✦ All tasks complete. Great sweep — nothing missed today.
+  </div>
+</div>
+
+<script>
+  const TOTAL = 10;
+
+  function getItems() {
+    return document.querySelectorAll('.item');
+  }
+
+  function updateProgress() {
+    const done = document.querySelectorAll('.item.done').length;
+    document.getElementById('progressCount').textContent = `${done} / ${TOTAL}`;
+    document.getElementById('progressBar').style.width = `${(done / TOTAL) * 100}%`;
+    document.getElementById('completeBanner').classList.toggle('show', done === TOTAL);
+  }
+
+  function toggle(el) {
+    el.classList.toggle('done');
+    updateProgress();
+  }
+
+  function resetAll() {
+    getItems().forEach(el => el.classList.remove('done'));
+    updateProgress();
+  }
+
+  function completeAll() {
+    getItems().forEach(el => el.classList.add('done'));
+    updateProgress();
+  }
+
+  updateProgress();
+</script>
+</body>
+</html>
