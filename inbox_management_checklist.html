@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inbox Management</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --border: #252a38;
+    --accent: #4f8ef7;
+    --accent-glow: rgba(79,142,247,0.12);
+    --accent-done: #34c97a;
+    --done-glow: rgba(52,201,122,0.10);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px 60px;
+  }
+
+  .card { width: 100%; max-width: 660px; }
+
+  .header { margin-bottom: 28px; }
+
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    margin-top: 24px;
+  }
+
+  .progress-text { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .progress-count { font-size: 12px; color: var(--accent); font-weight: 600; }
+
+  .progress-bar-wrap {
+    background: var(--border);
+    border-radius: 100px;
+    height: 4px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-done));
+    border-radius: 100px;
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .section { margin-bottom: 24px; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .section-pill {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+
+  .p1 { background: rgba(79,142,247,0.15); color: #4f8ef7; }
+  .p2 { background: rgba(167,139,250,0.15); color: #a78bfa; }
+  .p3 { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .p4 { background: rgba(52,201,122,0.15); color: #34c97a; }
+
+  .section-label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+  }
+
+  .checklist { display: flex; flex-direction: column; gap: 5px; }
+
+  .item {
+    display: flex;
+    align-items: flex-start;
+    gap: 13px;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--surface);
+    user-select: none;
+  }
+
+  .item:hover { border-color: var(--border); background: #1d2230; }
+
+  .item.done {
+    background: var(--done-glow);
+    border-color: rgba(52,201,122,0.2);
+  }
+
+  .item.done .item-text {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: rgba(107,114,128,0.4);
+  }
+
+  .item.done .item-sub { color: #374151; }
+
+  .checkbox {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+    transition: all 0.2s ease;
+    font-size: 12px;
+    color: transparent;
+    font-weight: 700;
+  }
+
+  .item.done .checkbox {
+    background: var(--accent-done);
+    border-color: var(--accent-done);
+    color: white;
+  }
+
+  .item-body { flex: 1; }
+
+  .item-text {
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.5;
+    transition: color 0.2s ease;
+  }
+
+  .item-sub {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.6;
+    transition: color 0.2s ease;
+  }
+
+  .tag-never { color: #ef4444; font-weight: 700; }
+  .tag-good { color: #34c97a; font-weight: 700; }
+  .tag-note { color: #60a5fa; font-weight: 600; }
+
+  .hard-rule {
+    font-size: 12px;
+    font-weight: 600;
+    color: #ef4444;
+    background: rgba(239,68,68,0.08);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 24px;
+    text-align: center;
+    letter-spacing: 0.01em;
+  }
+
+  .actions { display: flex; gap: 10px; margin-top: 28px; }
+
+  .btn {
+    padding: 11px 22px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+  }
+
+  .btn-reset {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-reset:hover { background: #1d2230; border-color: var(--accent); color: var(--accent); }
+
+  .complete-banner {
+    display: none;
+    margin-top: 20px;
+    padding: 14px 18px;
+    background: var(--done-glow);
+    border: 1px solid rgba(52,201,122,0.3);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent-done);
+    text-align: center;
+  }
+
+  .complete-banner.show { display: block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="label">Daily · Email Management</div>
+    <h1>Inbox Management</h1>
+    <div class="subtitle">Matthew Hassler | ElixirCraft Supplies & Replen Pulse</div>
+  </div>
+
+  <div class="progress-label">
+    <span class="progress-text">Progress</span>
+    <span class="progress-count" id="progressCount">0 / 14</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div class="hard-rule">NOTHING IS EVER SENT WITHOUT MATTHEW CLICKING SEND — NO EXCEPTIONS</div>
+
+  <!-- SECTION 1 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-pill p1">Priority Folders</span>
+      <span class="section-label">Check These Every Single Day</span>
+    </div>
+    <div class="checklist">
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">Delegated to EA — every action item in here has been reviewed and actioned</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">Meetings — every scheduling request has been handled and the calendar updated</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">Requires Matt — every email needing his decision, approval, or attention is correctly labeled and flagged to him</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">Drafts — every draft is marked [DRAFT – REVIEW REQUIRED], has the AI summary block at the top, and is accurate and complete before Matthew sees it</div>
+          <div class="item-sub"><span class="tag-note">AI summary block must include:</span> email intent, recommended action (send / edit / ignore), and risk level (Low / Medium / High)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-pill p2">Labeling Accuracy</span>
+      <span class="section-label">Confirm the AI Got It Right</span>
+    </div>
+    <div class="checklist">
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">Any email that requires a decision, financial approval, or is sensitive or strategic is labeled Requires Matt — nothing that belongs there is sitting elsewhere</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">Invoices and receipts in label 3 have been forwarded to AP@elixircrafthardware.com as a draft — not sent, drafted only</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">Anything personal, legal, medical, or financial non-business is labeled Matt Only (Private) — no draft has been created for these, no summary written</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">Junk/Spam folder has been scanned — no legitimate email has been misclassified and auto-archived by mistake</div>
+          <div class="item-sub"><span class="tag-note">NOTE</span> This is part of the 10% oversight responsibility. The AI auto-archives label 6 — your job is to catch anything that should not be there.</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">Any email that is ambiguous or unclear has been labeled Requires Matt and flagged — no draft created, no action taken independently</div>
+          <div class="item-sub"><span class="tag-never">RULE</span> If there is any ambiguity, the default is do nothing except label and notify. Never guess on an unclear email.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-pill p3">Draft Quality</span>
+      <span class="section-label">Before Any Draft Reaches Matthew</span>
+    </div>
+    <div class="checklist">
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">No draft has been created for a negotiation, commitment, legal matter, hiring or termination, or financial approval — these go straight to Requires Matt with no draft</div>
+          <div class="item-sub"><span class="tag-good">AI may draft:</span> scheduling, clarifications, polite follow-ups, supplier replies, status updates only</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">Every draft tone is concise, professional, neutral, and matches Matthew's writing style — no emojis, no over-polishing, no AI-style dashes or bold formatting</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-pill p4">Follow-Ups & Nothing Slipping</span>
+      <span class="section-label">Close the Loop</span>
+    </div>
+    <div class="checklist">
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">Waiting on Response emails have been reviewed — any thread at Day 3, Day 7, or Day 14 has a follow-up draft prepared and clearly marked, ready for Matthew's review</div>
+          <div class="item-sub"><span class="tag-never">NEVER</span> send follow-ups directly — drafted only, Matthew clicks Send</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">No email that needs action is sitting unlabeled or unchecked — every email in the inbox has been correctly categorized and nothing has been missed</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox">✓</div>
+        <div class="item-body">
+          <div class="item-text">No emails or drafts have been deleted — completed threads with no further action are moved to Historical Archive (label 7), not deleted</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="complete-banner" id="completeBanner">
+    ✦ Inbox reviewed. Nothing missed, nothing sent without Matthew.
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-reset" onclick="resetAll()">↺ Reset Checklist</button>
+  </div>
+</div>
+
+<script>
+  const TOTAL = 14;
+
+  function getItems() { return document.querySelectorAll('.item'); }
+
+  function updateProgress() {
+    const done = document.querySelectorAll('.item.done').length;
+    document.getElementById('progressCount').textContent = `${done} / ${TOTAL}`;
+    document.getElementById('progressBar').style.width = `${(done / TOTAL) * 100}%`;
+    document.getElementById('completeBanner').classList.toggle('show', done === TOTAL);
+  }
+
+  function toggle(el) { el.classList.toggle('done'); updateProgress(); }
+  function resetAll() { getItems().forEach(el => el.classList.remove('done')); updateProgress(); }
+
+  updateProgress();
+</script>
+</body>
+</html>
