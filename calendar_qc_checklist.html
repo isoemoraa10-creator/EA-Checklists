@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CEO Calendar Quality Control</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --border: #252a38;
+    --accent: #4f8ef7;
+    --accent-glow: rgba(79,142,247,0.15);
+    --accent-done: #34c97a;
+    --done-glow: rgba(52,201,122,0.12);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --section-1: #4f8ef7;
+    --section-2: #a78bfa;
+    --section-3: #f59e0b;
+    --section-4: #34c97a;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px 60px;
+  }
+
+  .card { width: 100%; max-width: 680px; }
+
+  .header { margin-bottom: 28px; }
+
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    margin-top: 24px;
+  }
+
+  .progress-text { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .progress-count { font-size: 12px; color: var(--accent); font-weight: 600; }
+
+  .progress-bar-wrap {
+    background: var(--border);
+    border-radius: 100px;
+    height: 4px;
+    overflow: hidden;
+    margin-bottom: 32px;
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-done));
+    border-radius: 100px;
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .section { margin-bottom: 28px; }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .section-pill {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 100px;
+  }
+
+  .pill-1 { background: rgba(79,142,247,0.15); color: var(--section-1); }
+  .pill-2 { background: rgba(167,139,250,0.15); color: var(--section-2); }
+  .pill-3 { background: rgba(245,158,11,0.15); color: var(--section-3); }
+  .pill-4 { background: rgba(52,201,122,0.15); color: var(--section-4); }
+
+  .section-title-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+
+  .checklist { display: flex; flex-direction: column; gap: 4px; }
+
+  .item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 13px 16px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--surface);
+    user-select: none;
+  }
+
+  .item:hover { border-color: var(--border); background: #1e2332; }
+
+  .item.done {
+    background: var(--done-glow);
+    border-color: rgba(52,201,122,0.2);
+  }
+
+  .item.done .item-text {
+    color: var(--muted);
+    text-decoration: line-through;
+    text-decoration-color: rgba(107,114,128,0.5);
+  }
+
+  .item.done .item-note { color: #4b5563; }
+
+  .checkbox {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+    transition: all 0.2s ease;
+  }
+
+  .item.done .checkbox { background: var(--accent-done); border-color: var(--accent-done); }
+
+  .checkmark {
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .item.done .checkmark { opacity: 1; transform: scale(1); }
+
+  .item-text {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.5;
+    transition: color 0.2s ease;
+  }
+
+  .item-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+    font-style: italic;
+    transition: color 0.2s ease;
+  }
+
+  .actions { display: flex; gap: 10px; margin-top: 32px; }
+
+  .btn {
+    padding: 11px 22px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+  }
+
+  .btn-reset {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-reset:hover { background: #1e2332; border-color: var(--accent); color: var(--accent); }
+
+  .btn-all {
+    background: var(--accent-glow);
+    color: var(--accent);
+    border: 1px solid rgba(79,142,247,0.3);
+  }
+
+  .btn-all:hover { background: rgba(79,142,247,0.25); }
+
+  .complete-banner {
+    display: none;
+    margin-top: 24px;
+    padding: 14px 18px;
+    background: var(--done-glow);
+    border: 1px solid rgba(52,201,122,0.3);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--accent-done);
+    text-align: center;
+  }
+
+  .complete-banner.show { display: block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="label">Quality Control · Calendar Management</div>
+    <h1>CEO Calendar Quality Control</h1>
+    <div class="subtitle">Matthew Hassler | ElixirCraft Supplies & Replen Pulse</div>
+  </div>
+
+  <div class="progress-label">
+    <span class="progress-text">Progress</span>
+    <span class="progress-count" id="progressCount">0 / 20</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <!-- SECTION 1 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-pill pill-1">Section 1</span>
+      <span class="section-title-text">Schedule Protections</span>
+    </div>
+    <div class="checklist">
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">No meetings scheduled in the mornings — mornings are clear for creative work and workouts unless Matthew explicitly approved an exception</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Lunch is blocked 11:00 AM – 11:30 AM and has not been overridden by any meeting or task</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Friday is a focus day — no meetings scheduled, no tasks past 4:00 PM unless Matthew explicitly requested otherwise</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Weekends are completely clear — no business scheduled on Saturday or Sunday</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">No video meetings scheduled immediately after workouts</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Scheduling timelines respected — Matthew-requested calls within 1–3 days, external requests 1–2 weeks out</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 2 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-pill pill-2">Section 2</span>
+      <span class="section-title-text">Every Invite — Quality Check</span>
+    </div>
+    <div class="checklist">
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0f 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Every invite title follows the correct format — [Business Indicator] – [Who] – [Purpose]</div>
+          <div class="item-note">Example: RP – Team – Weekly Review / ES – Matt – Supplier Call</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Correct time and timezone confirmed on every invite — MST verified before any invite was sent</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Every invite has a full agenda in the description — no invite is missing an agenda</div>
+          <div class="item-note">No agenda = Matthew will not attend</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Contact info and phone number are in the description of every invite that requires them</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Zoom/Meet links are in the location field AND the description for every video meeting — and also in the corresponding ClickUp task</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">All guests have been added and invites sent — no attendee missing from any event</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Meeting durations are correct — default 30 minutes, podcasts and interviews 55 minutes</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Every podcast has 30 minutes prep time blocked before it and 30 minutes post-podcast review blocked after it goes live</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 3 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-pill pill-3">Section 3</span>
+      <span class="section-title-text">Color Coding & Calendar Accuracy</span>
+    </div>
+    <div class="checklist">
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Every event has the correct color — Green (Admin), Red (Coaching), Yellow (External), Teal (Focus), Purple (Personal), Orange (Business Travel), Pink (FYI/Notes)</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Personal travel is blocked as full-day Purple — Orange is only used for business travel logistics, not personal trips</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Multi-day events are marked at the top of the calendar AND blocked day by day — no availability is misread</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Afternoon slots after 2:00 PM are correctly marked FREE for Calendly bookings</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Meetings are batched together — no isolated single meetings with large gaps between them</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 4 -->
+  <div class="section">
+    <div class="section-header">
+      <span class="section-pill pill-4">Section 4</span>
+      <span class="section-title-text">Final Sign-Off</span>
+    </div>
+    <div class="checklist">
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">The event appearing on the calendar also appears correctly in Microsoft Teams under Calendar</div>
+        </div>
+      </div>
+      <div class="item" onclick="toggle(this)">
+        <div class="checkbox"><svg class="checkmark" width="11" height="8" viewBox="0 0 11 8" fill="none"><path d="M1 4L4 7L10 1" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div>
+          <div class="item-text">Any conflict, gap, or item requiring Matthew's awareness has been flagged and logged in the Calendar Audit Sheet</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-reset" onclick="resetAll()">↺ Reset Checklist</button>
+    <button class="btn btn-all" onclick="completeAll()">✓ Mark All Done</button>
+  </div>
+
+  <div class="complete-banner" id="completeBanner">
+    ✦ Calendar QC complete. Matthew's calendar meets every SOP requirement.
+  </div>
+</div>
+
+<script>
+  const TOTAL = 20;
+
+  function getItems() { return document.querySelectorAll('.item'); }
+
+  function updateProgress() {
+    const done = document.querySelectorAll('.item.done').length;
+    document.getElementById('progressCount').textContent = `${done} / ${TOTAL}`;
+    document.getElementById('progressBar').style.width = `${(done / TOTAL) * 100}%`;
+    document.getElementById('completeBanner').classList.toggle('show', done === TOTAL);
+  }
+
+  function toggle(el) { el.classList.toggle('done'); updateProgress(); }
+  function resetAll() { getItems().forEach(el => el.classList.remove('done')); updateProgress(); }
+  function completeAll() { getItems().forEach(el => el.classList.add('done')); updateProgress(); }
+
+  updateProgress();
+</script>
+</body>
+</html>
