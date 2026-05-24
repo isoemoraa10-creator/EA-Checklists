@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Distributor Quality Control</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #181c27;
+    --border: #252a38;
+    --accent: #f59e0b;
+    --accent-glow: rgba(245,158,11,0.12);
+    --accent-done: #34c97a;
+    --done-glow: rgba(52,201,122,0.12);
+    --fail-glow: rgba(239,68,68,0.1);
+    --fail-border: rgba(239,68,68,0.25);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 40px 20px 60px;
+  }
+
+  .card { width: 100%; max-width: 660px; }
+
+  .header { margin-bottom: 28px; }
+
+  .label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--text);
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    margin-top: 24px;
+  }
+
+  .progress-text { font-size: 12px; color: var(--muted); font-weight: 500; }
+  .progress-count { font-size: 12px; color: var(--accent); font-weight: 600; }
+
+  .progress-bar-wrap {
+    background: var(--border);
+    border-radius: 100px;
+    height: 4px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+
+  .progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--accent), var(--accent-done));
+    border-radius: 100px;
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  .context-note {
+    font-size: 12px;
+    color: var(--muted);
+    font-style: italic;
+    padding: 10px 14px;
+    background: var(--accent-glow);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: 8px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .checklist { display: flex; flex-direction: column; gap: 6px; margin-bottom: 28px; }
+
+  .item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px 16px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--surface);
+    user-select: none;
+  }
+
+  .item:hover { border-color: var(--border); background: #1e2332; }
+
+  .item.pass {
+    background: var(--done-glow);
+    border-color: rgba(52,201,122,0.25);
+  }
+
+  .item.pass .item-text { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(107,114,128,0.4); }
+  .item.pass .item-sub { color: #374151; }
+
+  .checkbox {
+    width: 22px;
+    height: 22px;
+    min-width: 22px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+    transition: all 0.2s ease;
+    font-size: 13px;
+    color: transparent;
+  }
+
+  .item.pass .checkbox { background: var(--accent-done); border-color: var(--accent-done); color: white; }
+
+  .item-body { flex: 1; }
+
+  .item-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.5;
+    transition: color 0.2s ease;
+  }
+
+  .item-sub {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 4px;
+    line-height: 1.5;
+    transition: color 0.2s ease;
+  }
+
+  .item-sub .kill { color: #ef4444; font-weight: 600; }
+  .item-sub .good { color: #34c97a; font-weight: 600; }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  .verdict {
+    display: none;
+    padding: 16px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    margin-bottom: 20px;
+    line-height: 1.5;
+  }
+
+  .verdict.pass-all {
+    display: block;
+    background: var(--done-glow);
+    border: 1px solid rgba(52,201,122,0.3);
+    color: var(--accent-done);
+  }
+
+  .actions { display: flex; gap: 10px; }
+
+  .btn {
+    padding: 11px 22px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s ease;
+  }
+
+  .btn-reset {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .btn-reset:hover { background: #1e2332; border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <div class="label">Research · ElixirCraft Supplies</div>
+    <h1>Distributor Quality Control</h1>
+    <div class="subtitle">Identification Phase Only — Do not apply or contact without Matthew's approval</div>
+  </div>
+
+  <div class="progress-label">
+    <span class="progress-text">Checks passed</span>
+    <span class="progress-count" id="progressCount">0 / 10</span>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div class="context-note">
+    Run through this for every distributor before logging in ClickUp. Tap each item as you confirm it. If a single item fails, note it — if they pass everything else, set to <strong>To Review</strong> rather than disqualifying outright.
+  </div>
+
+  <div class="checklist">
+
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox">✓</div>
+      <div class="item-body">
+        <div class="item-text">Not already in ClickUp CRM or the Distributor Google Sheet</div>
+        <div class="item-sub"><span class="kill">STOP</span> if already listed — mark as Already on ClickUp and move on</div>
+      </div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox">✓</div>
+      <div class="item-body">
+        <div class="item-text">No public pricing — prices are hidden behind a login</div>
+        <div class="item-sub"><span class="kill">DISQUALIFY</span> if prices are clearly visible without logging in &nbsp;|&nbsp; <span class="good">OK</span> if site says "Sign in to view pricing"</div>
+      </div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox">✓</div>
+      <div class="item-body">
+        <div class="item-text">True B2B distributor — carries multiple brands, sells to businesses not consumers</div>
+        <div class="item-sub"><span class="kill">DISQUALIFY</span> if it's a single brand, manufacturer, or consumer retailer</div>
+      </div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox">✓</div>
+      <div class="item-body">
+        <div class="item-text">Strong brand partnerships — carries products from multiple recognized brands, not just 1 or 2</div>
+        <div class="item-sub"><span class="kill">DISQUALIFY</span> if only 1–2 brand relationships and a very thin catalogue &nbsp;|&nbsp; <span class="good">STRONG SIGNAL</span> if they have flyers, catalogues, and active brand materials</div>
+      </div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox">✓</div>
+      <div class="item-body">
+        <div class="item-text">Address verified via Google Search + Street View — confirms a real warehouse or distribution facility</div>
+        <div class="item-sub"><span class="kill">DISQUALIFY</span> if address returns a home, sign shop, or unrelated business &nbsp;|&nbsp; <span class="good">OK</span> if industrial building even without signage</div>
+      </div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox">✓</div>
+      <div class="item-body">
+        <div class="item-text">Can deliver to Wisconsin — national distributor OR regional within 1–2 states of WI (MN, IL, IA, MI, IN, OH)</div>
+        <div class="item-sub"><span class="kill">DISQUALIFY</span> if strictly regional to a completely different US region (CA, New England, Deep South only)</div>
+      </div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox">✓</div>
+      <div class="item-body">
+        <div class="item-text">A real credit application or account setup process exists — link noted</div>
+        <div class="item-sub"><span class="kill">DISQUALIFY</span> if only option is a Google/email login with no business details &nbsp;|&nbsp; <span class="good">OK</span> if it's a "call to apply" or "submit a request" form</div>
+      </div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox">✓</div>
+      <div class="item-body">
+        <div class="item-text">If a Dealer Locator exists — dealers are diverse, not all the same company</div>
+        <div class="item-sub"><span class="kill">DISQUALIFY</span> if all listed dealers are one company (e.g. all Fastenal) — signals exclusive arrangement &nbsp;|&nbsp; Skip if no dealer locator exists</div>
+      </div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox">✓</div>
+      <div class="item-body">
+        <div class="item-text">One concern rule — if they pass all key checks but have one issue, do NOT disqualify</div>
+        <div class="item-sub">Set status to <strong style="color:#f59e0b">To Review</strong> and flag for Matthew or Logan — one concern alone is never a reason to remove a strong distributor</div>
+      </div>
+    </div>
+
+    <div class="item" onclick="toggle(this)">
+      <div class="checkbox">✓</div>
+      <div class="item-body">
+        <div class="item-text">ClickUp entry is complete — company name, website URL, application link, product categories, notes, correct status, date updated</div>
+        <div class="item-sub">No application submitted. Identification only.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="verdict pass-all" id="verdict">
+    ✦ All checks passed — distributor qualifies. Logged in ClickUp as Accounts to Apply For.
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-reset" onclick="resetAll()">↺ New Distributor</button>
+  </div>
+</div>
+
+<script>
+  const TOTAL = 10;
+
+  function getItems() { return document.querySelectorAll('.item'); }
+
+  function updateProgress() {
+    const done = document.querySelectorAll('.item.pass').length;
+    document.getElementById('progressCount').textContent = `${done} / ${TOTAL}`;
+    document.getElementById('progressBar').style.width = `${(done / TOTAL) * 100}%`;
+    document.getElementById('verdict').classList.toggle('pass-all', done === TOTAL);
+  }
+
+  function toggle(el) {
+    el.classList.toggle('pass');
+    updateProgress();
+  }
+
+  function resetAll() {
+    getItems().forEach(el => el.classList.remove('pass'));
+    updateProgress();
+  }
+
+  updateProgress();
+</script>
+</body>
+</html>
